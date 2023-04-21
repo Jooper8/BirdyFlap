@@ -27,6 +27,7 @@ public class BirdyFlap extends ApplicationAdapter {
 	Texture pipeDown;
 	Texture pipeTop;
 	Texture gameOver;
+	Texture titleScreen;
 
 	ShapeRenderer shapeRenderer;
 	Circle birdCircle;
@@ -89,6 +90,7 @@ public class BirdyFlap extends ApplicationAdapter {
 		pipeDown = new Texture("cano_baixo_maior.png");
 		pipeTop = new Texture("cano_topo_maior.png");
 		gameOver = new Texture("game_over.png");
+		titleScreen = new Texture("titlescreen.png");
 	}
 
 	private void startObjects(){
@@ -159,7 +161,7 @@ public class BirdyFlap extends ApplicationAdapter {
 				preferences.putInteger("maxScore", maxScore);
 				preferences.flush();
 			}
-			positionBirdHorizontal -= Gdx.graphics.getDeltaTime()*500;;
+			positionBirdHorizontal -= Gdx.graphics.getDeltaTime()*500;
 
 			if(touchScreen){
 				gameState = 0;
@@ -211,6 +213,10 @@ public class BirdyFlap extends ApplicationAdapter {
 				deviceHeight/2 + spaceBetweenPipes/2 + positionPipeVertical);
 		textScore.draw(batch, String.valueOf(points), deviceWidth/2,
 		deviceHeight - 110);
+
+		if(gameState == 0) {
+			batch.draw(titleScreen, deviceWidth / 2 - titleScreen.getWidth() / 2, deviceHeight / 2 + 160);
+		}
 
 		if(gameState == 2){
 			batch.draw(gameOver, deviceWidth/2 - gameOver.getWidth()/2,
