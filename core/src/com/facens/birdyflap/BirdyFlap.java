@@ -28,9 +28,10 @@ public class BirdyFlap extends ApplicationAdapter {
 	Texture pipeTop;
 	Texture gameOver;
 	Texture titleScreen;
+	Texture coin;
 
 	ShapeRenderer shapeRenderer;
-	Circle birdCircle;
+	Circle birdCircle, coinCircle;
 	Rectangle rectanglePipeTop;
 	Rectangle rectanglePipeDown;
 
@@ -39,8 +40,7 @@ public class BirdyFlap extends ApplicationAdapter {
 	float variation = 0;
 	float gravity = 2;
 	float starterBirdVerticalPosition;
-	float positionPipeHorizontal;
-	float positionPipeVertical;
+	float positionPipeHorizontal, positionPipeVertical, positionCoinHorizontal, positionCoinVertical;
 	float spaceBetweenPipes;
 	Random random;
 	int points = 0;
@@ -62,7 +62,6 @@ public class BirdyFlap extends ApplicationAdapter {
 	Viewport viewport;
 	final float VIRTUAL_WIDTH = 720;
 	final float VIRTUAL_HEIGHT = 1280;
-
 	
 	@Override
 	public void create () {
@@ -91,6 +90,7 @@ public class BirdyFlap extends ApplicationAdapter {
 		pipeTop = new Texture("cano_topo_maior.png");
 		gameOver = new Texture("game_over.png");
 		titleScreen = new Texture("titlescreen.png");
+		coin = new Texture("coin1.png");
 	}
 
 	private void startObjects(){
@@ -101,6 +101,7 @@ public class BirdyFlap extends ApplicationAdapter {
 		deviceHeight = VIRTUAL_HEIGHT;
 		starterBirdVerticalPosition = deviceHeight/2;
 		positionPipeHorizontal = deviceWidth;
+		positionCoinHorizontal = deviceWidth;
 		spaceBetweenPipes = 350;
 
 		textScore = new BitmapFont();
@@ -117,6 +118,7 @@ public class BirdyFlap extends ApplicationAdapter {
 
 		shapeRenderer = new ShapeRenderer();
 		birdCircle = new Circle();
+		coinCircle = new Circle();
 		rectanglePipeDown = new Rectangle();
 		rectanglePipeTop = new Rectangle();
 
@@ -150,6 +152,8 @@ public class BirdyFlap extends ApplicationAdapter {
 			if( positionPipeHorizontal < -pipeTop.getWidth()){
 				positionPipeHorizontal = deviceWidth;
 				positionPipeVertical = random.nextInt(400) - 200;
+				positionCoinVertical = random.nextInt(Math.round(deviceHeight)+50);
+				//positionCoinHorizontal = random.nextInt(950)+50;
 				pipePassed = false;
 			}
 			if( starterBirdVerticalPosition > 0 || touchScreen)
@@ -180,6 +184,10 @@ public class BirdyFlap extends ApplicationAdapter {
 				starterBirdVerticalPosition + birds[0].getHeight()/2,
 				birds[0].getWidth()/2
 		);
+		coinCircle.set(
+				positionPipeHorizontal,
+				deviceHeight/2, coin.getWidth()/2
+		);
 		rectanglePipeDown.set(
 				positionPipeHorizontal,
 				deviceHeight/2 - pipeDown.getHeight() - spaceBetweenPipes / 2 + positionPipeVertical,
@@ -207,11 +215,12 @@ public class BirdyFlap extends ApplicationAdapter {
 		batch.draw(background,0,0,deviceWidth, deviceHeight);
 		batch.draw(birds[(int) variation],
 				50 + positionBirdHorizontal, starterBirdVerticalPosition);
+		batch.draw(coin, positionPipeHorizontal + 450, positionPipeVertical);
 		batch.draw(pipeDown, positionPipeHorizontal,
 				deviceHeight/2 - pipeDown.getHeight() - spaceBetweenPipes/2 + positionPipeVertical);
 		batch.draw(pipeTop, positionPipeHorizontal,
 				deviceHeight/2 + spaceBetweenPipes/2 + positionPipeVertical);
-		textScore.draw(batch, String.valueOf(points), deviceWidth/2,
+		textScore.draw(batch, String.valueOf(points), deviceWidth/2.2f,
 		deviceHeight - 110);
 
 		if(gameState == 0) {
