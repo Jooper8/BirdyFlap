@@ -1,5 +1,5 @@
 # Birdy Flap
-## Versão: 2.0
+## Versão: 2.5
 ## Status do Projeto: ✔️ Concluído
 
 ## Tópicos
@@ -32,6 +32,10 @@ Um projeto realizado no Android Studio utilizando libGDX para recriar Flappy Bir
 ✔️ High Score
 
 ✔️ Moedas aleatórias que aumentam pontuação
+
+✔️ Zonas de morte nos extremos em cima e em baixo da tela
+
+✔️ Dificuldade que aumenta com o passar de 20 pontos
 
 ## Distribuição
 [Birdy Flap](https://github.com/Jooper8/BirdyFlap)
