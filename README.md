@@ -1,5 +1,5 @@
 # Birdy Flap
-## Versão: 2
+## Versão: 2.0
 ## Status do Projeto: ✔️ Concluído
 
 ## Tópicos
