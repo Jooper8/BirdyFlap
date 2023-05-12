@@ -27,11 +27,15 @@ public class BirdyFlap extends ApplicationAdapter {
 	Texture pipeDown;
 	Texture pipeTop;
 	Texture gameOver;
+	//Declarada a variável da textura da tela título.
 	Texture titleScreen;
-	Texture coin;
+
+	//Declarado um array de texturas coin e a que será selecionada futuramente pelo código.
+	Texture[] coin;
+	Texture currentCoinVar;
 
 	ShapeRenderer shapeRenderer;
-	Circle birdCircle, coinCircle;
+	Circle birdCircle, coinCircle; //Declarado a colisão da moeda.
 	Rectangle rectanglePipeTop;
 	Rectangle rectanglePipeDown;
 
@@ -51,10 +55,14 @@ public class BirdyFlap extends ApplicationAdapter {
 	BitmapFont textScore;
 	BitmapFont textRestart;
 	BitmapFont textBestScore;
+	int coinVar;
+
 
 	Sound soundFlying;
 	Sound soundCollision;
 	Sound soundScore;
+	//Declaração da variável do som da moeda.
+	Sound soundCoin;
 
 	Preferences preferences;
 
@@ -67,6 +75,7 @@ public class BirdyFlap extends ApplicationAdapter {
 	public void create () {
 		startTextures();
 		startObjects();
+		startingRandomCoinSpot.nextInt(1200);
 	}
 
 	@Override
@@ -89,8 +98,11 @@ public class BirdyFlap extends ApplicationAdapter {
 		pipeDown = new Texture("cano_baixo_maior.png");
 		pipeTop = new Texture("cano_topo_maior.png");
 		gameOver = new Texture("game_over.png");
+		//Relacionado a variável da tela título com a devida imagem.
 		titleScreen = new Texture("titlescreen.png");
-		coin = new Texture("coin1.png");
+		coin = new Texture[2];
+		coin[0] = new Texture("coin1.png");
+		coin[1] = new Texture("coin2.png");
 	}
 
 	private void startObjects(){
@@ -125,6 +137,8 @@ public class BirdyFlap extends ApplicationAdapter {
 		soundFlying = Gdx.audio.newSound(Gdx.files.internal("som_asa.wav"));
 		soundCollision = Gdx.audio.newSound(Gdx.files.internal("som_batida.wav"));
 		soundScore = Gdx.audio.newSound(Gdx.files.internal("som_pontos.wav"));
+		//Declaração de qual som será relacionado à moeda.
+		soundCoin = Gdx.audio.newSound(Gdx.files.internal("som_moedas.mp3"));
 
 		preferences = Gdx.app.getPreferences("flappyBird");
 		maxScore = preferences.getInteger("maxScore",0);
@@ -149,13 +163,18 @@ public class BirdyFlap extends ApplicationAdapter {
 				soundFlying.play();
 			}
 			positionPipeHorizontal -= Gdx.graphics.getDeltaTime() * 200;
+			//Mantém a moeda gerada se movimentando horizontalmente.
+			positionCoinHorizontal -= Gdx.graphics.getDeltaTime() * 200;
 			if( positionPipeHorizontal < -pipeTop.getWidth()){
 				positionPipeHorizontal = deviceWidth;
 				positionPipeVertical = random.nextInt(400) - 200;
-				positionCoinVertical = random.nextInt(Math.round(deviceHeight)+50);
-				//positionCoinHorizontal = random.nextInt(950)+50;
 				pipePassed = false;
 			}
+			//Gera uma moeda em posição aleatória.
+			if( positionCoinHorizontal < -coin[0].getWidth()) {
+				positionCoinHorizontal = deviceWidth + random.nextInt(Math.round((deviceWidth * .5f)));
+				positionCoinVertical = random.nextInt(Math.round(deviceHeight)) - 200;
+			};
 			if( starterBirdVerticalPosition > 0 || touchScreen)
 				starterBirdVerticalPosition = starterBirdVerticalPosition - gravity;
 			gravity++;
@@ -166,7 +185,6 @@ public class BirdyFlap extends ApplicationAdapter {
 				preferences.flush();
 			}
 			positionBirdHorizontal -= Gdx.graphics.getDeltaTime()*500;
-
 			if(touchScreen){
 				gameState = 0;
 				points = 0;
@@ -184,9 +202,11 @@ public class BirdyFlap extends ApplicationAdapter {
 				starterBirdVerticalPosition + birds[0].getHeight()/2,
 				birds[0].getWidth()/2
 		);
+		//Detecta colisão da moeda.
 		coinCircle.set(
-				positionPipeHorizontal,
-				deviceHeight/2, coin.getWidth()/2
+				50 + positionCoinHorizontal + coin[0].getWidth()/2,
+				positionCoinVertical + coin[0].getHeight()/2,
+				coin[0].getWidth()/2
 		);
 		rectanglePipeDown.set(
 				positionPipeHorizontal,
@@ -200,6 +220,32 @@ public class BirdyFlap extends ApplicationAdapter {
 
 		boolean collidedPipeTop = Intersector.overlaps(birdCircle, rectanglePipeTop);
 		boolean collidedPipeDown = Intersector.overlaps(birdCircle, rectanglePipeDown);
+		boolean collidedCoin = Intersector.overlaps(birdCircle, coinCircle);
+		boolean collidedCoinPipeTop = Intersector.overlaps(coinCircle, rectanglePipeTop);
+		boolean collidedCoinPipeDown = Intersector.overlaps(coinCircle, rectanglePipeDown);
+
+		//Caso moeda colida com o cano, move-se à direita.
+		if(collidedCoinPipeTop || collidedCoinPipeDown){
+			positionCoinHorizontal+=random.nextInt(150)+100;
+		}
+
+		//Adiciona pontos, tocarsom de moeda e gera nova moeda aleatóriamente.
+		if(collidedCoin){
+			if(currentCoinVar == coin[0]){
+				points = points + 10;
+				soundCoin.play();
+			}
+			else{
+				points = points + 5;
+				soundCoin.play();
+			}
+			if (random.nextInt(11)-1 > 10) {
+				coinVar = 0;}
+			else {
+				coinVar = 1;
+			}
+			positionCoinHorizontal = -deviceHeight;
+		}
 
 		if (collidedPipeTop || collidedPipeDown){
 			if (gameState == 1){
@@ -215,7 +261,9 @@ public class BirdyFlap extends ApplicationAdapter {
 		batch.draw(background,0,0,deviceWidth, deviceHeight);
 		batch.draw(birds[(int) variation],
 				50 + positionBirdHorizontal, starterBirdVerticalPosition);
-		batch.draw(coin, positionPipeHorizontal + 450, positionPipeVertical);
+		batch.draw(coin[coinVar],
+				50 + positionCoinHorizontal, positionCoinVertical);
+		currentCoinVar = coin[coinVar];
 		batch.draw(pipeDown, positionPipeHorizontal,
 				deviceHeight/2 - pipeDown.getHeight() - spaceBetweenPipes/2 + positionPipeVertical);
 		batch.draw(pipeTop, positionPipeHorizontal,
@@ -223,6 +271,7 @@ public class BirdyFlap extends ApplicationAdapter {
 		textScore.draw(batch, String.valueOf(points), deviceWidth/2.2f,
 		deviceHeight - 110);
 
+		//Caso na tela inicial do jogo, mostra a Logo.
 		if(gameState == 0) {
 			batch.draw(titleScreen, deviceWidth / 2 - titleScreen.getWidth() / 2, deviceHeight / 2 + 160);
 		}
