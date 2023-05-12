@@ -36,8 +36,8 @@ public class BirdyFlap extends ApplicationAdapter {
 
 	ShapeRenderer shapeRenderer;
 	Circle birdCircle, coinCircle; //Declarado a colisão da moeda.
-	Rectangle rectanglePipeTop;
-	Rectangle rectanglePipeDown;
+	Rectangle rectanglePipeTop, rectanglePipeDown,
+	topScreenCollider, bottomScreenCollider; //Declarados colisões de morte tocando nos cantos da tela.
 
 	float deviceWidth;
 	float deviceHeight;
@@ -56,7 +56,8 @@ public class BirdyFlap extends ApplicationAdapter {
 	BitmapFont textRestart;
 	BitmapFont textBestScore;
 	int coinVar;
-
+	//Declaração da variável a ser utilizada para definir níveis de dificuldade.
+	int difficultyLevel;
 
 	Sound soundFlying;
 	Sound soundCollision;
@@ -75,13 +76,11 @@ public class BirdyFlap extends ApplicationAdapter {
 	public void create () {
 		startTextures();
 		startObjects();
-		startingRandomCoinSpot.nextInt(1200);
 	}
 
 	@Override
 	public void render () {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
 		verifyGameState();
 		validatePoints();
 		drawTextures();
@@ -133,6 +132,8 @@ public class BirdyFlap extends ApplicationAdapter {
 		coinCircle = new Circle();
 		rectanglePipeDown = new Rectangle();
 		rectanglePipeTop = new Rectangle();
+		topScreenCollider = new Rectangle();
+		bottomScreenCollider = new Rectangle();
 
 		soundFlying = Gdx.audio.newSound(Gdx.files.internal("som_asa.wav"));
 		soundCollision = Gdx.audio.newSound(Gdx.files.internal("som_batida.wav"));
@@ -162,9 +163,16 @@ public class BirdyFlap extends ApplicationAdapter {
 				gravity = -15;
 				soundFlying.play();
 			}
-			positionPipeHorizontal -= Gdx.graphics.getDeltaTime() * 200;
-			//Mantém a moeda gerada se movimentando horizontalmente.
-			positionCoinHorizontal -= Gdx.graphics.getDeltaTime() * 200;
+			if (difficultyLevel == 0){
+				positionPipeHorizontal -= Gdx.graphics.getDeltaTime() * 200;
+				//Mantém a moeda gerada se movimentando horizontalmente.
+				positionCoinHorizontal -= Gdx.graphics.getDeltaTime() * 200;
+			}
+			//Aumenta a velocidade dos canos e moedas.
+			else if (difficultyLevel == 1){
+				positionPipeHorizontal -= Gdx.graphics.getDeltaTime() * 250;
+				positionCoinHorizontal -= Gdx.graphics.getDeltaTime() * 250;
+			}
 			if( positionPipeHorizontal < -pipeTop.getWidth()){
 				positionPipeHorizontal = deviceWidth;
 				positionPipeVertical = random.nextInt(400) - 200;
@@ -208,6 +216,11 @@ public class BirdyFlap extends ApplicationAdapter {
 				positionCoinVertical + coin[0].getHeight()/2,
 				coin[0].getWidth()/2
 		);
+		//Detecta colisão com os cantos da tela.
+		topScreenCollider.set(
+				deviceWidth/2 - 300, deviceHeight + 100, deviceWidth, 300);
+		bottomScreenCollider.set(
+				deviceWidth/2 - 300, deviceHeight - (deviceHeight - 1), deviceWidth, 1);
 		rectanglePipeDown.set(
 				positionPipeHorizontal,
 				deviceHeight/2 - pipeDown.getHeight() - spaceBetweenPipes / 2 + positionPipeVertical,
@@ -217,7 +230,8 @@ public class BirdyFlap extends ApplicationAdapter {
 				positionPipeHorizontal, deviceHeight / 2 + spaceBetweenPipes / 2 + positionPipeVertical,
 				pipeTop.getWidth(), pipeTop.getHeight()
 		);
-
+		boolean collidedTop = Intersector.overlaps(birdCircle, topScreenCollider);
+		boolean collidedBot = Intersector.overlaps(birdCircle, bottomScreenCollider);
 		boolean collidedPipeTop = Intersector.overlaps(birdCircle, rectanglePipeTop);
 		boolean collidedPipeDown = Intersector.overlaps(birdCircle, rectanglePipeDown);
 		boolean collidedCoin = Intersector.overlaps(birdCircle, coinCircle);
@@ -229,7 +243,7 @@ public class BirdyFlap extends ApplicationAdapter {
 			positionCoinHorizontal+=random.nextInt(150)+100;
 		}
 
-		//Adiciona pontos, tocarsom de moeda e gera nova moeda aleatóriamente.
+		//Adiciona pontos, toca som de moeda e gera nova moeda aleatóriamente.
 		if(collidedCoin){
 			if(currentCoinVar == coin[0]){
 				points = points + 10;
@@ -247,7 +261,8 @@ public class BirdyFlap extends ApplicationAdapter {
 			positionCoinHorizontal = -deviceHeight;
 		}
 
-		if (collidedPipeTop || collidedPipeDown){
+		//Adicionado colisão acima e abaixo da tela para a perca do jogo.
+		if (collidedPipeTop || collidedPipeDown || collidedTop || collidedBot){
 			if (gameState == 1){
 				soundCollision.play();
 				gameState = 2;
@@ -285,6 +300,10 @@ public class BirdyFlap extends ApplicationAdapter {
 			textBestScore.draw(batch,
 					"Your record is: "+ maxScore + " points",
 					deviceWidth/2-140, deviceHeight/2 - gameOver.getHeight());
+			if (difficultyLevel == 1) {
+				spaceBetweenPipes +=100;
+				difficultyLevel = 0;
+			}
 		}
 		batch.end();
 	}
@@ -295,11 +314,16 @@ public class BirdyFlap extends ApplicationAdapter {
 				points++;
 				pipePassed = true;
 				soundScore.play();
+				//Caso acima de 20 pontos, aumenta o nível de dificuldade uma vez.
+				if(points > 20 && difficultyLevel == 0){
+					difficultyLevel = 1;
+					if(difficultyLevel == 1){
+						spaceBetweenPipes -= 100;
+					}
+				}
 			}
 		}
-
 		variation += Gdx.graphics.getDeltaTime() * 10;
-
 		if (variation > 3)
 			variation = 0;
 	}
